@@ -1,0 +1,66 @@
+= csNavigationPlugin plugin =
+
+The csNavigationPlugin is a simple way to handle navigation in your applications.
+
+csNavigationPlugin is working on Symfony 1.2.
+
+== At a glance ==
+ * A navigation object to manage multiple trees. All navigation is located under a single root to represent the sitemap
+ * Navigation trees can be segmented by level and iteration (starting root, number of levels drilled down)
+ * Automated active handling / expanding of children / route detection
+ * Drive your navigation using a navigation.yml file or pull from your database, or both
+ * A singleton who manages breadcrumbs. By default, a root item is present (text: Home, uri: @homepage)
+ * A component who display the breadcrumbs
+
+== License ==
+
+The csNavigationPlugin is licensed under the GNU Lesser General Public License (LGPL).
+
+== Installation ==
+
+ * Install the plugin:
+ 
+ {{{
+ $ symfony plugin-install http://plugins.symfony-project.com/csNavigationPlugin
+ $ symfony cc
+ }}}
+ 
+ * Enable the module csNavigation in settings.yml:
+ 
+ {{{
+ all:
+   .settings:
+     enabled_modules:        [default, csNavigation]
+ }}} 
+ 
+== Usage ==
+Include the tree component (in the layout for instance):
+{{{
+#!php
+<div id="navigarion">
+  <?php include_component('csNavigation', 'tree') ?>
+</div>
+}}}
+
+specify level and/or iteration (default iteration is 2):
+{{{
+#!php
+<div id="navigarion">
+  <?php include_component('csNavigation', 'tree', array('level' => 1, 'iteration' => 3)) ?>
+</div>
+}}}
+
+Include the breadcrumbs component (in the layout for instance):
+{{{
+#!php
+<p id="breadcrumbs">
+  You are here :
+  <?php include_component('csNavigation', 'breadcrumbs') ?>
+</p>
+}}}
+
+** The CS Navigation plugin Breadcrumb portion borrows heavily from the isicsBreadcrumbs Plugin **
+== Changelog ==
+
+=== 2009-03-29 | 0.9.1 beta ===
+ * Initial Commit.
