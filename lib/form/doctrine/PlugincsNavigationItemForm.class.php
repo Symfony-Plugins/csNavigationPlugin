@@ -1,15 +1,15 @@
 <?php
 
 /**
- * PlugincsNavigation form.
+ * PlugincsNavigationItem form.
  *
  * @package    form
- * @subpackage csNavigation
+ * @subpackage csNavigationItem
  * @version    SVN: $Id: sfDoctrineFormTemplate.php 6174 2007-11-27 06:22:40Z fabien $
  */
-abstract class PlugincsNavigationForm extends BasecsNavigationForm
+abstract class PlugincsNavigationItemForm extends BasecsNavigationItemForm
 {
-	protected $parentId = null;
+  protected $parentId = null;
   // protected $display_root;
 	// 
 	// public function __construct($model = null, $display_root = null)
@@ -35,7 +35,7 @@ abstract class PlugincsNavigationForm extends BasecsNavigationForm
 		Doctrine::getTable('csNavigation')->setForm($this);
 		
     $this->widgetSchema['parent_id'] = new sfWidgetFormDoctrineChoice(array(
-      'model' => 'csNavigation',
+      'model' => 'csNavigationItem',
       'add_empty' => '~ (object is at root level)',
       'order_by' => array('root_id, lft',''),
       'method' => 'getIndentedName'
@@ -43,7 +43,7 @@ abstract class PlugincsNavigationForm extends BasecsNavigationForm
 
     $this->validatorSchema['parent_id'] = new sfValidatorDoctrineChoice(array(
       'required' => false,
-      'model' => 'csNavigation'
+      'model' => 'csNavigationItem'
       ));
 
     $this->setDefault('parent_id', $this->object->getParentId());

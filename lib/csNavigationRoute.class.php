@@ -1,7 +1,7 @@
 <?php 
 
 /*
-  TODO Deprecate this class
+  TODO Refactor this class
 */
 
 /**
@@ -66,10 +66,10 @@ class csNavigationRoute
       {
         $this->addRouteParam($key, $param);
       }
-      elseif(method_exists(new csNavigation(), sfInflector::camelize('get_default_'.$key)))
+      elseif(method_exists(new csNavigationMenu(), sfInflector::camelize('get_default_'.$key)))
       {
         $method = sfInflector::camelize('get_default_'.$key);
-        $this->addRouteParam($key, csNavigation::$method($this));
+        $this->addRouteParam($key, csNavigationMenu::$method($this));
       }
     }
   }

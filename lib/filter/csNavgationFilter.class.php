@@ -23,20 +23,20 @@ class csNavigationFilter extends sfFilter
    */
   public function execute($filterChain)
   {
-	 if ($this->isFirstCall())
-	 {
-		if(file_exists(sfConfig::get('sf_config_dir').'/navigation.yml'))
-		{
-			$path = sfConfig::get('sf_config_dir').'/navigation.yml';
-		}
-		else
-		{
-			$path = sfConfig::get('sf_app_config_dir').'/navigation.yml';
-		}
-		include(sfContext::getInstance()->getConfigCache()->checkConfig($path));
-		csNavigationHelper::init($settings, $navigation);
-	 }
-	 $filterChain->execute();
+   if ($this->isFirstCall())
+   {
+    if(file_exists(sfConfig::get('sf_config_dir').'/navigation.yml'))
+    {
+      $path = sfConfig::get('sf_config_dir').'/navigation.yml';
+    }
+    else
+    {
+      $path = sfConfig::get('sf_app_config_dir').'/navigation.yml';
+    }
+    include(sfContext::getInstance()->getConfigCache()->checkConfig($path));
+    csNavigationHelper::init($settings, $navigation);
+   }
+   $filterChain->execute();
   }
 }
 

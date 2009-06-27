@@ -32,8 +32,6 @@ abstract class BasecsNavigationComponents extends sfComponents
       // $nav->generateBreadcrumbFromNavigation();      
     }
     
-    
-    
     if($nav)
     {
       if (isset($this->root))
@@ -49,6 +47,7 @@ abstract class BasecsNavigationComponents extends sfComponents
     }
     $this->class = isset($this->class) ? $this->class : '';
   }  
+  
   public function executeTree()
   {
     $this->iterations = $this->iterations ? $this->iterations : 0;
@@ -57,9 +56,13 @@ abstract class BasecsNavigationComponents extends sfComponents
     $this->max_level = $this->iterations ? ($this->level ? $this->level + $this->iterations : $this->iterations) : null;
     if(!isset($this->items))
     {
-      $nav = csNavigationHelper::getNavigationTree($this->level, $this->iterations);
+      $nav = Doctrine::getTable('csNavigationMenu')->getMenu();
+
       $this->title = isset($this->title) ? $this->title : $nav->getTitle();
-      $this->items = $nav->getItems($this->offset);
+      
+      $root = $nav->getSegment($this->level, $this->iterations);
+      
+      $this->items = $root->getChildren();
     }
     $this->class = isset($this->class) ? $this->class : '';
     $this->id = isset($this->id) ? $this->id : '';

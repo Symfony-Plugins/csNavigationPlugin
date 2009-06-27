@@ -26,194 +26,38 @@ class csNavigationHelper
       if(isset($settings['database']['driven']) && $settings['database']['driven'])
       { 
         //Populate Tree from Database
-        if(!Doctrine::getTable('csNavigation')->isPopulated())
+        if(!Doctrine::getTable('csNavigationItem')->isPopulated())
         {
           //Build Database from Existing navigation.yml file
           self::initDatabaseFromYaml($navigation);
         }
-        //Build from nested set
-        $root = Doctrine::getTable('csNavigation')->getNavigationRoot();
-        $nav = self::nestedSetToArray($root);
-        $tree = self::getNavigationTreeFromArray($nav['children']);
+        //Pull from database, create navigation structure
+        $tree = self::getNavigationTreeFromDatabase();
       }
       else
       {
         //Populate tree from navigation.yml
         $tree = self::getNavigationTreeFromYaml($navigation);
       }
+
+      $menuTable = Doctrine::getTable('csNavigationMenu');
       
-      // Run tree's setup() method for dynamically adding branches
-      $tree->setup();
+      $menuTable->storeTree($tree);
       
+      // Run the configure() method for dynamically adding branches
+      Doctrine::getTable('csNavigationMenu')->configure();
+      
+      $tree = $menuTable->restoreTree();
+
       // Cache Tree
-      $serialized = serialize($tree);
+      $serialized = serialize($tree->toArray());
       file_put_contents($cachePath, $serialized);
     } 
+    else
+    {
+      Doctrine::getTable('csNavigationMenu')->storeTree(self::getTree());
+    }
     self::$_settings = $settings;
-  }
-  
-  
-  static function initDatabaseFromYaml($navigation)
-  {
-    self::arrayToNestedSet($navigation);
-  }
-  
-  // Generic Function that converts the YAML array to a doctrine nested set
-  static function arrayToNestedSet($arr, $root = null)
-  {
-    foreach ($arr as $key => $value) 
-    {
-      if (!$root) 
-      {
-        $record = self::createRoot($key, $value);
-        self::setItemAttributes($record, self::parseItemAttributes($value));        
-        self::arrayToNestedSet($value, $record);
-        continue;
-      }
-      $root->refresh();
-      $record = new csNavigation();
-      $record->name = $key;
-      if(is_array($value))
-      {
-        self::setItemAttributes($record, self::parseItemAttributes($value));
-        $record->getNode()->insertAsLastChildOf($root);
-        self::arrayToNestedSet($value, $record);
-      }
-      else
-      {
-        $record->route = $value;
-        $record->getNode()->insertAsLastChildOf($root);
-      }
-    }
-  }
-  
-  static function createRoot($key, $value)
-  {
-    $root = new csNavigation();
-    $root->name = $key;
-    self::setItemAttributes($root, self::parseItemAttributes($value));
-    $root->save();
-    $treeObject = Doctrine::getTable('csNavigation')->getTree();
-    $treeObject->createRoot($root);
-    return $root;
-  }
-  
-  /*
-    TODO Refactor breadcrumb methods
-  */
-  static function getBreadcrumb($level = 0)
-  {
-    $tree = self::getTree();
-    return $tree->getBreadcrumb($level);
-    
-    // $breadcrumb = new csBreadcrumbNavigation();
-    // $breadcrumb->generateBreadcrumbFromNavigation();
-    // return $breadcrumb;
-  }
-  
-  /*
-    TODO Deprecate this method
-  */
-  static function getNavigationItems($level = 0, $iterations = null)
-  {
-    $nav = self::getNavigationTree($level, $iterations);
-    return $nav->getItems();
-  }
-  
-  /**
-   * getNavigationTree 
-   * Returns array of the current navigation
-   * @static
-   * @access public
-   * @return array
-   */
-  static function getNavigationTree($level = 0, $iterations = null)
-  {
-    $tree = self::getTree();
-    return $tree->getSegment($level, $iterations);
-  }
-  
-  /**
-   * Create a navigation tree from the navigation.yml file
-   *
-   * @param string $arr 
-   * @param string $level 
-   * @param string $root 
-   * @return void
-   * @author Brent Shaffer
-   */
-  static function getNavigationTreeFromYaml($arr, $level = 0, &$root = null)
-  {
-    if(!$root)
-    {
-      $root = new csTreeNavigation();
-    }
-    foreach ($arr as $key => $value) {
-      if(is_array($value))
-      {
-        $item = new csNavigationItem($key, null, $level);
-        self::setItemAttributes($item, self::parseItemAttributes($value));
-        if($value)
-        {
-          self::getNavigationTreeFromYaml($value, $level + 1, $item);         
-        }
-      }
-      else
-      {
-        $item = new csNavigationItem($key, $value, $level);
-      }
-      $root->addItem($item);
-      
-      if ($level == 0) 
-      {
-        break; // Currently no multiple-root support
-      }
-    }
-    return $root;
-  }
-
-  /**
-   * Receives a nested set in array form, converts to generic NavigationTree
-   *
-   * @param string $arr 
-   * @param string $level 
-   * @param string $root 
-   * @return void
-   * @author Brent Shaffer
-   */
-  static function getNavigationTreeFromArray($arr, $level = 0, &$root = null)
-  {
-    $root = $root ? $root : new csTreeNavigation();
-    foreach ($arr as $key => $value) 
-    {
-      $item = new csNavigationItem($value['name'], $value['route'], $level + 1);
-      self::setItemAttributes($item, $value);
-      if(isset($value['children']))
-      {
-        self::getNavigationTreeFromArray($value['children'], $level + 1, $item);
-      }
-      $root->addItem($item);
-    }
-    return $root;
-  }
-  
-  /**
-   * Converts nested set from Database into array form
-   *
-   * @param string $obj 
-   * @return void
-   * @author Brent Shaffer
-   */
-  static function nestedSetToArray($obj = null)
-  {
-    $arr = self::getObjArray($obj);
-    if($children = $obj->getNode()->getChildren())
-    {
-      foreach ($children as $child_obj) {
-        $arr['children'][$child_obj['id']] = self::nestedSetToArray($child_obj);
-      }
-    }
-    return $arr;
   }
   
   /**
@@ -232,9 +76,148 @@ class csNavigationHelper
     }
     
     // Pull navigation tree from cache
-    $serialized = file_get_contents($cachePath);
+    $unserialized = unserialize(file_get_contents($cachePath));
 
-    return unserialize($serialized);
+    $menus = new csNavigationCollectionManager();
+
+    foreach ($unserialized as $menu_arr) 
+    {
+      $menu = new csNavigationMenu();
+      $menu->fromArray($menu_arr);
+      $menus[] = $menu;
+    }
+
+    return $menus;
+  }
+  
+  
+  static function initDatabaseFromYaml($navigation)
+  {
+    self::getNavigationTreeFromYaml($navigation, true);
+  }
+  
+  static function getNavigationTreeFromYaml($arr, $commit = false)
+  {
+    $menu_tree = new csNavigationCollectionManager();
+
+    foreach ($arr as $key => $value) 
+    {
+      $cleaned = self::cleanItemAttributes($value);
+      
+      $menu = new csNavigationMenu();
+
+      $menu->title = $key;
+
+      $root = new csNavigationItem();
+
+      $root->name = $key;
+      
+      $root->level = 0;
+      
+      $root->fromArray($cleaned['attributes']);
+
+      if($commit)
+      {
+        $menu->createRoot($root);
+      }
+      
+      $root = self::getNavigationBranchFromYaml($root, $cleaned['children'], $commit);
+
+      $menu['NavigationRoot'] = $root;
+
+      $menu_tree[] = $menu;
+    }
+    
+    return $menu_tree;
+  }
+  
+  /**
+   * Create a navigation tree from the navigation.yml file
+   *
+   * @param string $arr 
+   * @param string $level 
+   * @param string $root 
+   * @return void
+   * @author Brent Shaffer
+   */
+  static function getNavigationBranchFromYaml($root, $arr, $commit = false, $level = 1)
+  {
+    $tree = new Doctrine_Collection('csNavigationItem');
+
+    foreach ($arr as $key => $value) 
+    {
+      if(is_array($value))
+      {
+        $cleaned = self::cleanItemAttributes($value);
+        
+        $item = new csNavigationItem();
+
+        $item->name = $key;
+
+        $item->level = $level;
+        
+        $item->fromArray($cleaned['attributes']);
+        
+        if ($commit) 
+        {
+          $item->save();
+          $item->getNode()->insertAsLastChildOf($root);
+        }
+        
+        if($cleaned['children'])
+        {
+          $item = self::getNavigationBranchFromYaml($item, $cleaned['children'], $commit, $level + 1);
+        }
+      }
+      else
+      {
+        $item = new csNavigationItem();
+
+        $item->name = $key;
+        
+        $item->route = $value;
+        
+        $item->level = $level;
+
+        if ($commit) 
+        {
+          $root->getNode()->addChild($item);
+        }
+      }
+      $root->addItem($item);
+    }
+    return $root;
+  }
+  
+  
+  static function getNavigationTreeFromDatabase()
+  {
+    $tree = new csNavigationCollectionManager();
+    $menus = Doctrine::getTable('csNavigationMenu')->findAll();
+    foreach ($menus as $menu) 
+    {
+      $menu['NavigationRoot'] = self::getNavigationTreeFromNestedSet($menu['NavigationRoot']);
+      $tree[] = $menu;
+    }
+    return $tree;
+  }
+  /**
+   * Converts nested set from Database into array form
+   *
+   * @param string $obj 
+   * @return void
+   * @author Brent Shaffer
+   */
+  static function getNavigationTreeFromNestedSet($obj = null)
+  {
+    if($children = $obj->getNode()->getChildren())
+    {
+      foreach ($children as $child_obj) {
+        $child = self::getNavigationTreeFromNestedSet($child_obj);
+        $obj->addChild($child);
+      }
+    }
+    return $obj;
   }
   
   /**
@@ -244,45 +227,21 @@ class csNavigationHelper
    * @return void
    * @author Brent Shaffer
    */
-  static function parseItemAttributes(&$arr)
+  static function cleanItemAttributes($arr)
   {
-    $attr = array();
+    $attr = array('attributes' => array(), 
+                  'children' => array());
+                  
     foreach ($arr as $key => $value) {
-      if (strpos($key, '~') === 0) {
-        $attr[substr($key, 1)] = $value;
-        unset($arr[$key]);
+      if (strpos($key, '~') === 0) 
+      {
+        $attr['attributes'][substr($key, 1)] = $value;
+      }
+      else
+      {
+        $attr['children'][$key] = $value;
       }
     }
     return $attr;
   }
-  
-  static function setItemAttributes(&$item, $arr)
-  {
-    foreach ($arr as $key => $value) {
-      $item->$key = $value;
-    }
-  }
-  
-  /**
-   * Available object attributes in database / navigation.yml
-   *
-   *  TODO Make Extensible - pull from csNavigation model
-   *
-   * @param string $obj 
-   * @return void
-   * @author Brent Shaffer
-   */
-  static function getObjArray($obj)
-  {
-    return  array(  'id' => $obj['id'],
-                    'name' => $obj['name'], 
-                    'route' => $obj['route'],
-                    'left' => $obj['lft'],
-                    'right' => $obj['rgt'],
-                    'level' => $obj['level'],
-                    'protected' => $obj['protected'],
-                    'locked' => $obj['locked'],
-    );
-  }
-
 }

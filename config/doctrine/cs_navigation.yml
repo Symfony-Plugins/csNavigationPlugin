@@ -1,4 +1,4 @@
-csNavigation:
+csNavigationItem:
   actAs:  
     NestedSet:
       hasManyRoots: true
@@ -14,12 +14,14 @@ csNavigation:
       type:   boolean
       default: false
 
-# csNavigationMenu:
-#   columns:
-#     title:  string(255)
-#     description: string(255)
-#     root:   integer
-#   relations:
-#     csNavigationItem:
-#       local:    root
-#       foreign:  id
+csNavigationMenu:
+  columns:
+    title:  string(255)
+    description: string(255)
+    root_id:   integer
+  relations:
+    csNavigationItem:
+      alias:        NavigationRoot
+      foreignAlias: NavigationMenu
+      local:        root_id
+      foreign:      id

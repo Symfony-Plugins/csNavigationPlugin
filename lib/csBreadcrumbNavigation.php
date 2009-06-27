@@ -22,7 +22,7 @@
 class csBreadcrumbNavigation extends csBaseNavigation
 {
   static    $instance = null;
-	protected 		$appended_items = array();
+  protected     $appended_items = array();
   static protected $session_name = 'csBreadcrumbNavigation';
   /**
    * Constructor
@@ -31,10 +31,10 @@ class csBreadcrumbNavigation extends csBaseNavigation
   public function __construct($items = null)
   {
     $this->setRoot('Home', '@homepage');
-		if($items)
-		{
-			$this->items = array_merge($this->items, $items);
-		}
+    if($items)
+    {
+      $this->items = array_merge($this->items, $items);
+    }
   }
     
   /**
@@ -46,32 +46,32 @@ class csBreadcrumbNavigation extends csBaseNavigation
     $this->items[0] = new csNavigationItem($name, $route);
     $this->save();
   }
-	public function generateBreadcrumbFromNavigation()
-	{
-		$nav = csNavigationHelper::getNavigationItems();
-		foreach ($nav as $item) {
-			if($breadcrumb = $item->getBreadcrumbArray())
-			{
-				$this->appendItems($breadcrumb);			
-				return;	
-			}
-		}
-	}
-	static function appendItem($item)
-	{
-		self::getInstance()->appended_items[] = $item;
-	}	
-	static function appendItems($items)
-	{
-		foreach ($items as $item) {
-			self::appendItem($item);
-		}
-	}
-	public function getItems($offset = 0)
-	{
-		return array_merge($this->items, $this->appended_items);
-	}
-	public static function getInstance()
+  public function generateBreadcrumbFromNavigation()
+  {
+    $nav = csNavigationHelper::getNavigationItems();
+    foreach ($nav as $item) {
+      if($breadcrumb = $item->getBreadcrumbArray())
+      {
+        $this->appendItems($breadcrumb);      
+        return; 
+      }
+    }
+  }
+  static function appendItem($item)
+  {
+    self::getInstance()->appended_items[] = $item;
+  } 
+  static function appendItems($items)
+  {
+    foreach ($items as $item) {
+      self::appendItem($item);
+    }
+  }
+  public function getItems($offset = 0)
+  {
+    return array_merge($this->items, $this->appended_items);
+  }
+  public static function getInstance()
   {
     if (is_null(self::$instance))
     {
@@ -81,24 +81,24 @@ class csBreadcrumbNavigation extends csBaseNavigation
       }
       else
       {
-				self::createInstance();
-      	sfContext::getInstance()->getRequest()->setParameter(self::$session_name, self::$instance);
-			}
+        self::createInstance();
+        sfContext::getInstance()->getRequest()->setParameter(self::$session_name, self::$instance);
+      }
     }
     return self::$instance;
   }
 
-	public static function createInstance()
-	{
-		self::$instance = new csBreadcrumbNavigation();
+  public static function createInstance()
+  {
+    self::$instance = new csBreadcrumbNavigation();
     self::$instance->save();
-	}
-	public function hasItems()
-	{
-		if(sizeof($this->getItems()) == 1)
-		{
-			return !($this->items[0]->name == 'Home' && $this->items[0]->route == '@homepage');
-		}
-		return parent::hasItems();
-	}
+  }
+  public function hasItems()
+  {
+    if(sizeof($this->getItems()) == 1)
+    {
+      return !($this->items[0]->name == 'Home' && $this->items[0]->route == '@homepage');
+    }
+    return parent::hasItems();
+  }
 }
