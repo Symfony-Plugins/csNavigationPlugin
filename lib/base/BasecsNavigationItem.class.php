@@ -62,6 +62,26 @@ class BasecsNavigationItem
   }
   
   
+  
+  /**
+  * gets the child items
+  *
+  */
+  public function getItems($offset = 0)
+  {
+    return array_slice($this->items, $offset);
+  }
+  
+  
+  /**
+  * Sets the child items for the navigation item
+  *
+  */
+  public function setItems($items)
+  {
+    $this->items = $items;
+  }
+  
   /**
   * true if item is not protected or user is authenticated
   *
@@ -69,6 +89,25 @@ class BasecsNavigationItem
   public function isAuthenticated()
   {
     return !$this->protected or sfContext::getInstance()->getUser()->isAuthenticated();
+  }
+  
+  /** 
+  * true if size of children is greater than zero
+  *
+  */
+  public function hasItems()
+  {
+    return (sizeof($this->items) > 0);
+  }
+  
+  /** 
+  * true if this route matches the current one
+  *
+  */
+  public function isActive()
+  {
+    $route = new csNavigationRoute($this->route);
+    return $route->isCurrentUrl();
   }
   
   /**
@@ -87,6 +126,45 @@ class BasecsNavigationItem
       }
     }
     return false;
+  }
+  
+  /**
+  * returns the active item if it is this item, 
+  * or a child of this item
+  *
+  */
+  public function findActiveItem()
+  {
+    if($this->isActive())
+    {
+      return $this;
+    }
+    foreach ($this->items as $item) {
+      if ($item->isActiveBranch()) {
+        return $item;
+      }
+    }
+    return null;
+  }
+  
+  /*
+    TODO Refactor or Deprecate (this method seems silly)
+  */
+  public function findActiveItemForLevel($level)
+  {
+    if ($this->level == $level) 
+    {
+      return $this->isActiveBranch() ? $this : null;
+    }
+    foreach($this->items as $item)
+    {
+      if($active = $item->findActiveItemForLevel($level))
+      {
+        return $active;
+      }
+    }
+
+    return null;
   }
   /**
    * Adds an item as a child of the item.  This is good for dynamically adding 
@@ -109,21 +187,6 @@ class BasecsNavigationItem
     }
     array_push($this->items, $new);
     return $new;
-  }
-  public function getItems($offset = 0)
-  {
-    return array_slice($this->items, $offset);
-  }
-  
-  public function hasItems()
-  {
-    return (sizeof($this->items) > 0);
-  }
-  
-  public function isActive()
-  {
-    $route = new csNavigationRoute($this->route);
-    return $route->isCurrentUrl();
   }
   
   /**
@@ -191,56 +254,6 @@ class BasecsNavigationItem
   /*
     TODO Deprecate
   */
-  public function getSegment($iteration = null, $level = null)
-  { 
-    if($level === null)
-    {
-      $level = $this->level - 1;
-    }
-    if($this->level > $level && (!$iteration || ($this->level < $level + $iteration)))
-    {
-      if($this->level == $level)
-      {
-        return array();
-      }
-      return array($this);
-    }
-    $items = array();
-    foreach ($this->items as $item) {
-      $items = array_merge($items, $item->getSegment($iteration, $level));
-    }
-    return $items;
-  }
-  
-  /*
-    TODO Deprecate
-  */
-  public function findActiveItemForLevel($level)
-  {
-    foreach($this->items as $item)
-    {
-      if($item->level == $level)
-      {
-        if($item->isActiveBranch())
-        {
-          return $item;
-        }
-      }
-      else
-      {
-        if($active = $item->findActiveItemForLevel($level))
-        {
-          return $active;
-        }
-      } 
-    }
-
-    return false;
-  }
-  
-  /*
-    TODO Deprecate
-  */
   public function getBreadcrumb($level = 0)
   {
     $breadcrumb = array($this);
@@ -256,6 +269,9 @@ class BasecsNavigationItem
     return false;
   }
   
+  /*
+    TODO Deprecate
+  */
   public function getBreadcrumbArray()
   {
     if($this->isActive())

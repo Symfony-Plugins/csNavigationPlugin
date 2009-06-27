@@ -2,11 +2,10 @@
 
 class csBaseNavigation
 {
-	static protected $session_name = 'csBaseNavigation';
-	protected $items    = array();
-	static    $instance = null;
-	
-	/**
+  protected $items    = array();
+  static    $instance = null;
+  
+  /**
    * Add an item
    *
    * @param mixed $name
@@ -14,16 +13,15 @@ class csBaseNavigation
    */
   public function addItem($name, $route = null)
   {
-		if($name instanceof csNavigationItem)
-		{
-			$item = $name;
-		}
-		else
-		{
-			$item = new csNavigationItem($name, $route);
-		}
+    if($name instanceof csNavigationItem)
+    {
+      $item = $name;
+    }
+    else
+    {
+      $item = new csNavigationItem($name, $route);
+    }
     array_push($this->items, $item);
-    $this->save();
   }
 
   /**
@@ -33,35 +31,16 @@ class csBaseNavigation
   public function clearItems()
   {
     $this->items = array();
-    $this->save();
   }  
   
-  /**
-   * Get the unique csBaseNavigation instance (singleton)
-   *
-   */
-	//   public static function getInstance($session_name = null)
-	//   {
-	//     if (is_null(self::$instance))
-	//     {
-	//       if (sfContext::getInstance()->getRequest()->getParameter($session_name))
-	//       {
-	//         self::$instance = sfContext::getInstance()->getRequest()->getParameter($session_name);
-	//       }
-	//       else
-	//       {
-	// 			self::createInstance();
-	//       	sfContext::getInstance()->getRequest()->setParameter($session_name, self::$instance);
-	// 		}
-	//     }
-	//     return self::$instance;
-	//   }
-	// 
-	// public static function createInstance()
-	// {
-	// 	self::$instance = new csBaseNavigation();
-	//     self::$instance->save();
-	// }
+  public function toArray()
+  {
+    $arr = array();
+    foreach ($this->getItems() as $item) {
+      $arr[] = $item->toArray();
+    }
+    return $arr;
+  }
   
   /**
    * Retrieve an array of csNavigationItems
@@ -72,12 +51,8 @@ class csBaseNavigation
   {
     return array_slice($this->items, $offset);
   }
-	public function hasItems()
-	{
-		return (sizeof($this->getItems()) > 0) ;
-	}
-  protected function save()
+  public function hasItems()
   {
-    sfContext::getInstance()->getRequest()->setParameter(self::$session_name, $this);
+    return (sizeof($this->getItems()) > 0) ;
   }
 }

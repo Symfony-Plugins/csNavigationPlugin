@@ -22,44 +22,46 @@ abstract class BasecsNavigationComponents extends sfComponents
 {
   public function executeBreadcrumbs()
   {
-		if(csBreadcrumbNavigation::getInstance()->hasItems())
-		{
-			$nav = csBreadcrumbNavigation::getInstance();
-		}
-		else 
-		{
-			$nav = csNavigationHelper::getBreadcrumb($this->level);
-			// $nav->generateBreadcrumbFromNavigation();			
-		}
-		
-		
-		
-		if($nav)
-		{
-	    if (isset($this->root))
-	    {
-	      $nav->setRoot($this->root['text'], $this->root['uri']);
-	    }
+    if(csBreadcrumbNavigation::getInstance()->hasItems())
+    {
+      $nav = csBreadcrumbNavigation::getInstance();
+    }
+    else 
+    {
+      $nav = csNavigationHelper::getBreadcrumb($this->level);
+      // $nav->generateBreadcrumbFromNavigation();      
+    }
+    
+    
+    
+    if($nav)
+    {
+      if (isset($this->root))
+      {
+        $nav->setRoot($this->root['text'], $this->root['uri']);
+      }
 
-	    if (!isset($this->offset))
-	    {
-	      $this->offset = 0;
-	    }
-	    $this->items = $nav->getItems($this->offset);
-		}
-		$this->class = isset($this->class) ? $this->class : '';
+      if (!isset($this->offset))
+      {
+        $this->offset = 0;
+      }
+      $this->items = $nav->getItems($this->offset);
+    }
+    $this->class = isset($this->class) ? $this->class : '';
   }  
   public function executeTree()
   {
-		$this->iterations = isset($this->iterations) ? $this->iterations : null;
-		$this->max_level = $this->iterations ? $this->level ? $this->level + $this->iterations - 1 : $this->iterations : null;
-		if(!isset($this->items))
-		{
-	    $nav = csNavigationHelper::getNavigationTree($this->level, $this->iterations);
-	    $this->title = isset($this->title) ? $this->title : $nav->getTitle();
-			$this->items = $nav->getItems($this->offset);
-		}
-		$this->class = isset($this->class) ? $this->class : '';
-		$this->id = isset($this->id) ? $this->id : '';
+    $this->iterations = $this->iterations ? $this->iterations : 0;
+    $this->level = $this->level ? $this->level : 0;
+
+    $this->max_level = $this->iterations ? ($this->level ? $this->level + $this->iterations : $this->iterations) : null;
+    if(!isset($this->items))
+    {
+      $nav = csNavigationHelper::getNavigationTree($this->level, $this->iterations);
+      $this->title = isset($this->title) ? $this->title : $nav->getTitle();
+      $this->items = $nav->getItems($this->offset);
+    }
+    $this->class = isset($this->class) ? $this->class : '';
+    $this->id = isset($this->id) ? $this->id : '';
   }
 }

@@ -4,7 +4,6 @@
 class csBaseTreeNavigation extends csBaseNavigation
 {
   static      $instance = null;
-  static protected  $session_name = 'csTreeNavigation';
   protected   $title    = null;
   
   public function __construct()
@@ -25,9 +24,9 @@ class csBaseTreeNavigation extends csBaseNavigation
       if(is_array($value))
       {
         $url = isset($value['url']) ? $value['url'] : null;
-        $new = $this->addItem($key, $url);
+        $this->addItem($key, $url);
         unset($value['url']);
-        $this->setWithArray($value, $new);
+        $this->setWithArray($value, $this->root);
       }
       else
       { 
@@ -35,35 +34,13 @@ class csBaseTreeNavigation extends csBaseNavigation
       }
     }
   }
-  
-  public function addItem($name, $route = null)
-  {
-    if($name instanceof csNavigationItem)
-    {
-      array_push($this->items, $name);
-    }
-    else
-    {
-      array_push($this->items, new csNavigationItem($name, $route));
-    }
-    $this->save();
-  }
 
-  public function getSegment($level, $iteration = null)
-  {
-    $root = $this->findActiveItemForLevel($level);
-    if($root)
-    {
-      $this->items = $root->getSegment($iteration, $level);
-      return $this;
-    }
-    $items = array();
-    foreach ($this->items as $item) {
-      $items = array_merge($items, $item->getSegment($level, $iteration));
-    }
-    $this->items = $items;
-    return $this;
-  }
+  // public function setRoot($name, $route = null)
+  // {
+  //   $this->root = ($name instanceof csNavigationItem) ?
+  //         $name : new csNavigationItem($name, $route);
+  // }
+
   public function getBreadcrumb($level = 0)
   {
     $breadcrumb = array($this);
@@ -74,70 +51,95 @@ class csBaseTreeNavigation extends csBaseNavigation
     }
     return false;
   }
-  public function newInstance()
-  {
-    $tree = new csNavigationTree();
-    $tree->items = $this->items;
-    $tree->title = $this->title;
-    return $tree;
-  }
-  public function toArray()
-  {
-    $arr = array();
-    foreach ($this->getItems() as $item) {
-      $arr[] = $item->toArray();
-    }
-    return $arr;
-  }
-  public static function getInstance()
-  {
-    if (is_null(self::$instance))
-    {
-      if (sfContext::getInstance()->getRequest()->getParameter(self::$session_name))
-      {
-        self::$instance = sfContext::getInstance()->getRequest()->getParameter(self::$session_name);
-      }
-      else
-      {
-        self::createInstance();
-        sfContext::getInstance()->getRequest()->setParameter(self::$session_name, self::$instance);
-      }
-    }
-    return self::$instance;
-  }
 
-  public function findActiveItemForLevel($level)
+  /**
+   * 
+   *
+   * @param string $root_level - The level of the root node for this segment
+   *                            (lowest possible is zero)
+   * @param string $iteration - number of levels displayed (0 displays all levels)
+   * @return void
+   * @author Brent Shaffer
+   */
+  public function getSegment($root_level, $iterations = null, $root = null)
+  {
+    $items = $root_level ? $this->getItemsForLevel($root_level) : $this->getItems();
+    $segment = $this->getSegmentItems($items, $root_level, $iterations);
+    $root = clone $this;  //Currently only supports one root
+    $root->items = array_filter($segment);
+    return $root;
+  }
+  
+  public function getSegmentItems($items, $root_level = 0, $iterations = null)
+  {
+    $segment = array();
+    
+    foreach ($items as $item) 
+    {
+      $children = $this->getSegmentItems($item->getItems(), $root_level, $iterations);
+      
+      // If the level is beneath this one, return the children of this object
+      if ($item->level <= $root_level) 
+      {
+        $segment = array_merge($segment, $children);
+      }
+      // if iterations are not set, or the item is within the iteration
+      elseif(!$iterations || $item->getLevel() <= ($root_level + $iterations))
+      {
+        $new_segment = clone $item;
+        $new_segment->setItems($children);
+        $segment[] = $new_segment;
+      }
+    }
+    
+    return array_filter($segment);
+  }
+  
+  /**
+   * determines what branch of the segment root 
+   * to display
+   *
+   * @param string $level 
+   * @return void
+   * @author Brent Shaffer
+   */
+  public function getItemsForLevel($level)
   {
     foreach($this->items as $item)
     {
-      if($item->level == $level)
+      if($active = $item->findActiveItemForLevel($level))
       {
-        if($item->isActiveBranch())
-        {
-          return $item;
-        }
+        break;
       }
-      elseif($item->isActive())
-      {
-        return $item;
-      }
-      else
-      {
-        if($active = $item->findActiveItemForLevel($level))
-        {
-          return $active;
-        }
-      } 
     }
-    return false;
+    if ($active) 
+    {
+      return $active->getItems();
+    }
+    return array();
+  }
+  public function findActiveItem()
+  {
+    foreach ($this->items as $item) 
+    {
+      if ($ret = $item->findActiveItem()) 
+      {
+        return $ret;
+      }
+    }
+    return null;
   }
 
-  public static function createInstance()
-  {
-    self::$instance = new csTreeNavigation();
-    self::$instance->save();
-  }
-  
+  /**
+   * For adding dynamic elements to a branch of a tree.
+   * Use in the setup() method.
+   *
+   * @param string $parentName - Name of the navigation item to add to
+   * @param string $item - mixed, either the string name of the new item, or the route object
+   * @param string $route (optional) - the route if $item is the string name
+   * @return void
+   * @author Brent Shaffer
+   */
   public function appendItem($parentName, $item, $route = null)
   {
     $parent = $this->matchItemByName($parentName);
@@ -154,8 +156,9 @@ class csBaseTreeNavigation extends csBaseNavigation
       $item->level = ($parent->getLevel() + 1);
     }
     $parent->items[] = $item;
-    return true;
+    return $parent;
   }
+  
   public function matchItemByName($name)
   {
     foreach ($this->items as $item) 
@@ -165,6 +168,24 @@ class csBaseTreeNavigation extends csBaseNavigation
         return $ret;
       }
     }
-    return false;
+    return null;
+  }
+ 
+  // =====================
+  // = Singleton Functions =
+  // =====================
+   
+  public static function getInstance()
+  {
+    if (is_null(self::$instance))
+    {
+      self::createInstance();
+    }
+    return self::$instance;
+  }
+ 
+  public static function createInstance()
+  {
+    self::$instance = new csTreeNavigation();
   }
 }

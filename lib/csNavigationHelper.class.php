@@ -23,7 +23,7 @@ class csNavigationHelper
     if (!file_exists($cachePath))
     {
       // Populate the Navigation Tree
-      if(isset($settings['database_driven']) && $settings['database_driven'])
+      if(isset($settings['database']['driven']) && $settings['database']['driven'])
       { 
         //Populate Tree from Database
         if(!Doctrine::getTable('csNavigation')->isPopulated())
@@ -55,15 +55,21 @@ class csNavigationHelper
   
   static function initDatabaseFromYaml($navigation)
   {
-    $root = self::createRoot();
-    self::arrayToNestedSet($navigation, $root);
+    self::arrayToNestedSet($navigation);
   }
   
   // Generic Function that converts the YAML array to a doctrine nested set
-  static function arrayToNestedSet($arr, $root)
+  static function arrayToNestedSet($arr, $root = null)
   {
     foreach ($arr as $key => $value) 
     {
+      if (!$root) 
+      {
+        $record = self::createRoot($key, $value);
+        self::setItemAttributes($record, self::parseItemAttributes($value));        
+        self::arrayToNestedSet($value, $record);
+        continue;
+      }
       $root->refresh();
       $record = new csNavigation();
       $record->name = $key;
@@ -79,6 +85,17 @@ class csNavigationHelper
         $record->getNode()->insertAsLastChildOf($root);
       }
     }
+  }
+  
+  static function createRoot($key, $value)
+  {
+    $root = new csNavigation();
+    $root->name = $key;
+    self::setItemAttributes($root, self::parseItemAttributes($value));
+    $root->save();
+    $treeObject = Doctrine::getTable('csNavigation')->getTree();
+    $treeObject->createRoot($root);
+    return $root;
   }
   
   /*
@@ -130,7 +147,6 @@ class csNavigationHelper
     if(!$root)
     {
       $root = new csTreeNavigation();
-      $level++;
     }
     foreach ($arr as $key => $value) {
       if(is_array($value))
@@ -145,6 +161,31 @@ class csNavigationHelper
       else
       {
         $item = new csNavigationItem($key, $value, $level);
+      }
+      $root->addItem($item);
+    }
+    return $root;
+  }
+
+  /**
+   * Receives a nested set in array form, converts to generic NavigationTree
+   *
+   * @param string $arr 
+   * @param string $level 
+   * @param string $root 
+   * @return void
+   * @author Brent Shaffer
+   */
+  static function getNavigationTreeFromArray($arr, $level = 0, &$root = null)
+  {
+    $root = $root ? $root : new csTreeNavigation();
+    foreach ($arr as $key => $value) 
+    {
+      $item = new csNavigationItem($value['name'], $value['route'], $level + 1);
+      self::setItemAttributes($item, $value);
+      if(isset($value['children']))
+      {
+        self::getNavigationTreeFromArray($value['children'], $level + 1, $item);
       }
       $root->addItem($item);
     }
@@ -171,31 +212,6 @@ class csNavigationHelper
   }
   
   /**
-   * Receives a nested set in array form, converts to generic NavigationTree
-   *
-   * @param string $arr 
-   * @param string $level 
-   * @param string $root 
-   * @return void
-   * @author Brent Shaffer
-   */
-  static function getNavigationTreeFromArray($arr, $level = 0, &$root = null)
-  {
-    $root = $root or new csTreeNavigation();
-    foreach ($arr as $key => $value) 
-    {
-      $item = new csNavigationItem($value['name'], $value['route'], $level + 1);
-      self::setItemAttributes($item, $value);
-      if(isset($value['children']))
-      {
-        self::getNavigationTreeFromArray($value['children'], $level + 1, $item);
-      }
-      $root->addItem($item);
-    }
-    return $root;
-  }
-  
-  /**
    * Pulls tree from cache directory (set by self::init())
    *
    * @return void
@@ -212,6 +228,7 @@ class csNavigationHelper
     
     // Pull navigation tree from cache
     $serialized = file_get_contents($cachePath);
+
     return unserialize($serialized);
   }
   
@@ -263,14 +280,4 @@ class csNavigationHelper
     );
   }
 
-  static function createRoot()
-  {
-    $root = new csNavigation();
-    $root->name = 'Root';
-    $root->save();
-    $treeObject = Doctrine::getTable('csNavigation')->getTree();
-    $treeObject->createRoot($root);
-    return $root;
-  }
-  
 }
