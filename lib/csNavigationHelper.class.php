@@ -163,6 +163,11 @@ class csNavigationHelper
         $item = new csNavigationItem($key, $value, $level);
       }
       $root->addItem($item);
+      
+      if ($level == 0) 
+      {
+        break; // Currently no multiple-root support
+      }
     }
     return $root;
   }

@@ -24,6 +24,26 @@ function getLevel($level, $arr, $current = 0)
   return $ret;
 }
 
+function get_breadcrumbs($params)
+{
+  return get_component('csNavigation', 'breadcrumbs', $params);
+}
+
+function get_navigation($params)
+{
+  return get_component('csNavigation', 'tree', $params);
+}
+
+function include_breadcrumbs($params)
+{
+  echo get_breadcrumbs($params);
+}
+
+function include_navigation($params)
+{
+  echo get_navigation($params);
+}
+
 // explodes an array into a querystring
 function explode_with_key($str, $groupglue = '&', $setglue = '=')
 {
