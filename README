@@ -154,5 +154,11 @@ the core navigation cannot be changed by the user, or certain branches cant be c
 Setting and expanding level will determine how your navigation is displayed by default.
 You can chose to have no items expanded until they are active, or expand out to a certain level.
 
+To Do
+-----
+  1. Add tasks to reimport navigation with updated navigation.yml file
+  2. Add administration module for the backend
+  3. Add "attributes" field for configurable HTML attributes
+
 === 2009-03-29 | 0.9.1 beta ===
  * Initial Commit.
