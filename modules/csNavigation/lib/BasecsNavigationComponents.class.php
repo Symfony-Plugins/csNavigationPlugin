@@ -22,29 +22,10 @@ abstract class BasecsNavigationComponents extends sfComponents
 {
   public function executeBreadcrumbs()
   {
-    if(csBreadcrumbNavigation::getInstance()->hasItems())
-    {
-      $nav = csBreadcrumbNavigation::getInstance();
-    }
-    else 
-    {
-      $nav = csNavigationHelper::getBreadcrumb($this->level);
-      // $nav->generateBreadcrumbFromNavigation();      
-    }
-    
-    if($nav)
-    {
-      if (isset($this->root))
-      {
-        $nav->setRoot($this->root['text'], $this->root['uri']);
-      }
-
-      if (!isset($this->offset))
-      {
-        $this->offset = 0;
-      }
-      $this->items = $nav->getItems($this->offset);
-    }
+    $this->items = csBreadcrumbs::hasInstance() ? 
+                      csBreadcrumbs::getInstance()->getItems() :
+                      Doctrine::getTable('csNavigationMenu')->getMenu()->getBreadcrumbs();
+                      
     $this->class = isset($this->class) ? $this->class : '';
   }  
   

@@ -5,7 +5,7 @@
  */
 abstract class PlugincsNavigationItem extends BasecsNavigationItem
 {
-  public $_children = array();
+  protected $_children = array();
   
   /**
   * true if item is not protected or user is authenticated
@@ -86,6 +86,32 @@ abstract class PlugincsNavigationItem extends BasecsNavigationItem
       }
     }
     return false;
+  }
+  public function breadcrumbify()
+  {
+    $crumb = clone $this;
+    $crumb->_children = array();
+    return $crumb;
+  }
+  
+  public function getActivePath()
+  {
+    if ($this->isActive()) 
+    {
+      $crumb = clone $this;
+      $crumb->_children = array();
+      return array($this->breadcrumbify());
+    }
+    foreach ($this->_children as $child) 
+    {
+      $path = $child->getActivePath();
+      if ($path) 
+      {
+        array_unshift($path, $this->breadcrumbify());
+        return $path;
+      }
+    }
+    return array();
   }
   
   /**

@@ -24,22 +24,22 @@ function getLevel($level, $arr, $current = 0)
   return $ret;
 }
 
-function get_breadcrumbs($params)
+function get_breadcrumbs($params = array())
 {
   return get_component('csNavigation', 'breadcrumbs', $params);
 }
 
-function get_navigation($params)
+function get_navigation($params = array())
 {
   return get_component('csNavigation', 'tree', $params);
 }
 
-function include_breadcrumbs($params)
+function include_breadcrumbs($params = array())
 {
   echo get_breadcrumbs($params);
 }
 
-function include_navigation($params)
+function include_navigation($params = array())
 {
   echo get_navigation($params);
 }

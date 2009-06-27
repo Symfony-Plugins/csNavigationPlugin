@@ -11,29 +11,29 @@ abstract class PlugincsNavigationItemForm extends BasecsNavigationItemForm
 {
   protected $parentId = null;
   // protected $display_root;
-	// 
-	// public function __construct($model = null, $display_root = null)
-	// {
-	// 	parent::__construct($model);
-	// 	$this->display_root = $display_root;
-	// }
+  // 
+  // public function __construct($model = null, $display_root = null)
+  // {
+  //  parent::__construct($model);
+  //  $this->display_root = $display_root;
+  // }
 
   public function setup()
   {
-		parent::setup();
+    parent::setup();
     unset($this['root_id'], $this['lft'], $this['rgt'], $this['level'], $this['id']);
     unset($this['locked']);
-		
-		$this->widgetSchema['route'] = new sfWidgetFormInputHidden();
-		
-		if($this->isNew())
-		{
-			$this->setDefault('route', '@generic_interior');
-			$this->validatorSchema['route'] = new sfValidatorString();
-		}
+    
+    $this->widgetSchema['route'] = new sfWidgetFormInputHidden();
+    
+    if($this->isNew())
+    {
+      $this->setDefault('route', '@generic_interior');
+      $this->validatorSchema['route'] = new sfValidatorString();
+    }
 
-		Doctrine::getTable('csNavigation')->setForm($this);
-		
+    Doctrine::getTable('csNavigation')->setForm($this);
+    
     $this->widgetSchema['parent_id'] = new sfWidgetFormDoctrineChoice(array(
       'model' => 'csNavigationItem',
       'add_empty' => '~ (object is at root level)',

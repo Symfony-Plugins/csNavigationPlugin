@@ -131,49 +131,24 @@ abstract class PlugincsNavigationMenu extends BasecsNavigationMenu
    return $parent;
   }
 
+  /**
+   * matches a navigation item by its name
+   * Useful when appending items to the navigation tree
+   *
+   * @param string $name 
+   * @return void
+   * @author Brent Shaffer
+   */
   public function matchItemByName($name)
   {
-   foreach ($this['NavigationRoot']->getChildren() as $item) 
-   {
-     if ($ret = $item->matchItemByName($name)) 
-     {
-       return $ret;
-     }
-   }
-   return null;
-  }
-
-  /*
-   TODO Deprecate
-  */
-  public function setWithArray($array, $item = null)
-  {
-    foreach ($array as $key => $value) {
-      if(is_array($value))
-      {
-        $url = isset($value['url']) ? $value['url'] : null;
-        $this->addItem($key, $url);
-        unset($value['url']);
-        $this->setWithArray($value, $this->root);
-      }
-      else
-      { 
-        $item->addItem($key, $value);
-      }
-    }
+    return $this['NavigationRoot']->matchItemByName($name);
   }
 
   /*
    TODO Refactor or Deprecate
   */
-  public function getBreadcrumb($level = 0)
+  public function getBreadcrumbs()
   {
-    $breadcrumb = array($this);
-    foreach ($this['NavigationRoot']->getChildren() as $item) {
-      if ($crumb = $item->getBreadcrumbArray($level)) {
-        return new csBreadcrumbNavigation($crumb);
-      }
-    }
-    return false;
+    return $this['NavigationRoot']->getActivePath();
   }
 }
