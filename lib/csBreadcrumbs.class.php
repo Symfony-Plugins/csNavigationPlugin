@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with isicsBreadcrumbsPlugin.  If not, see <http://www.gnu.org/licenses/>.
  */
-class csBreadcrumbs extends csBaseNavigation
+class csBreadcrumbs
 {
   static      $instance = null;
   protected   $appended_items = array();

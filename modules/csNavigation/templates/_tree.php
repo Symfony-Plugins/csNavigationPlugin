@@ -2,8 +2,7 @@
   <b><?php echo $title ?></b>
 <?php endif ?>
 <?php if (count($items) > 0): ?>
-
-<ul class="<?php echo $class ?>" id="<?php echo $id ?>">
+<ul <?php echo isset($class) ? "class='$class'" : '' ?> <?php echo isset($id) ? "id='$id'" : '' ?>>
 <?php foreach ($items as $item): ?>
 <?php if ($item->isAuthenticated()): ?>
    <?php if ($item->isActive()): ?>

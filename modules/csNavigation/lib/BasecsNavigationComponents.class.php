@@ -22,19 +22,20 @@ abstract class BasecsNavigationComponents extends sfComponents
 {
   public function executeBreadcrumbs()
   {
+    // pulls the current csBreadcrumb instance if there is one
+    // if one does not exist, attempts to generate one from the URL
     $this->items = csBreadcrumbs::hasInstance() ? 
                       csBreadcrumbs::getInstance()->getItems() :
                       Doctrine::getTable('csNavigationMenu')->getMenu()->getBreadcrumbs();
-                      
-    $this->class = isset($this->class) ? $this->class : '';
-  }  
+  }
   
   public function executeTree()
   {
-    $this->iterations = $this->iterations ? $this->iterations : 0;
-    $this->level = $this->level ? $this->level : 0;
+    $this->iterations = $this->iterations or 0;
+    $this->level = $this->level or 0;
 
-    $this->max_level = $this->iterations ? ($this->level ? $this->level + $this->iterations : $this->iterations) : null;
+    $this->max_level = $this->level + $this->iterations;
+    
     if(!isset($this->items))
     {
       $nav = Doctrine::getTable('csNavigationMenu')->getMenu();
@@ -45,7 +46,5 @@ abstract class BasecsNavigationComponents extends sfComponents
       
       $this->items = $root->getChildren();
     }
-    $this->class = isset($this->class) ? $this->class : '';
-    $this->id = isset($this->id) ? $this->id : '';
   }
 }
