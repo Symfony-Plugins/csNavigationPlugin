@@ -13,4 +13,13 @@ csNavigation:
     locked:
       type:   boolean
       default: false
-    
+
+# csNavigationMenu:
+#   columns:
+#     title:  string(255)
+#     description: string(255)
+#     root:   integer
+#   relations:
+#     csNavigationItem:
+#       local:    root
+#       foreign:  id
