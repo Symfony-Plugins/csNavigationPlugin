@@ -39,8 +39,6 @@ abstract class BasecsNavigationComponents extends sfComponents
     if(!isset($this->items))
     {
       $nav = Doctrine::getTable('csNavigationMenu')->getMenu();
-
-      $this->title = isset($this->title) ? $this->title : $nav->getTitle();
       
       $root = $nav->getSegment($this->level, $this->iterations);
       

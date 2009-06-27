@@ -205,28 +205,6 @@ abstract class PlugincsNavigationItem extends BasecsNavigationItem
     return false;
   }
   
-  /**
-   * returns true if this is active or one of its children is active
-   *
-   * @return void
-   * @author Brent Shaffer
-   */
-  public function isExpanded()
-  {
-    if($this->isActive())
-    {
-      return true;
-    }
-    foreach($this->getChildren() as $child)
-    {
-      if ($child->isExpanded())
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-  
   public function toArray($deep = true, $prefixKey = false)
   {
     $arr = parent::toArray($deep, $prefixKey);

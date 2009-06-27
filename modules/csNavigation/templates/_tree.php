@@ -14,7 +14,7 @@
    <?php else: ?>
      <li><?php echo $item->getName() ?>
   <?php endif ?>
-  <?php if ($item->hasChildren() && ($item->isExpanded() || ($max_level && $item->level <= $max_level))): ?>
+  <?php if ($item->hasChildren() && ($item->isActiveBranch() || ($max_level && $item->level <= $max_level))): ?>
       <?php include_component('csNavigation', 'tree', array('items' => $item->getChildren(), 'iterations' => $iterations)) ?>
   <?php endif ?>
   </li>
