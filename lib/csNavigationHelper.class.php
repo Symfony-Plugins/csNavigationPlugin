@@ -29,10 +29,13 @@ class csNavigationHelper
         if(!Doctrine::getTable('csNavigationItem')->isPopulated())
         {
           //Build Database from Existing navigation.yml file
-          self::initDatabaseFromYaml($navigation);
+          $tree = self::initDatabaseFromYaml($navigation);
         }
-        //Pull from database, create navigation structure
-        $tree = self::getNavigationTreeFromDatabase();
+        else
+        {
+          //Pull from database, create navigation structure
+          $tree = self::getNavigationTreeFromDatabase();          
+        }
       }
       else
       {
@@ -93,7 +96,7 @@ class csNavigationHelper
   
   static function initDatabaseFromYaml($navigation)
   {
-    self::getNavigationTreeFromYaml($navigation, true);
+    return self::getNavigationTreeFromYaml($navigation, true);
   }
   
   static function getNavigationTreeFromYaml($arr, $commit = false)
@@ -146,6 +149,8 @@ class csNavigationHelper
 
     foreach ($arr as $key => $value) 
     {
+      $root->refresh();
+      
       if(is_array($value))
       {
         $cleaned = self::cleanItemAttributes($value);
