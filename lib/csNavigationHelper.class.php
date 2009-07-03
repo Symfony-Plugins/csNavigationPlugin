@@ -102,9 +102,14 @@ class csNavigationHelper
   static function getNavigationTreeFromYaml($arr, $commit = false)
   {
     $menu_tree = new csNavigationCollectionManager();
-
+    
     foreach ($arr as $key => $value) 
     {
+      if (!is_array($value)) 
+      {
+        throw new sfException(sprintf('You have declared the navigation root "%s" without declaring any child attributes.', $key));
+      }
+
       $cleaned = self::cleanItemAttributes($value);
       
       $menu = new csNavigationMenu();

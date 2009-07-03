@@ -54,8 +54,10 @@ Installation
               ~protected:   on
             google:          http://www.google.com
 
-    Foo:                   #multiple navigation roots is supported
-      Bar:    @bar
+      Footer:                   #multiple navigation roots is supported
+        Foo:    @foo
+        Bar:    @bar
+        Baz:    @baz                
 
 The csNavigationRoute class supports token routes, internal routes, wildcards (*), and absolute urls.  It also supports 
 token routes with variables (:slug), and matches these by looking for the variable in the Request.  If this isn't found,
@@ -134,6 +136,9 @@ Item attributes are prefixed by a tilde (~) and child items are added as display
   * _protected_: requires user authentication
   * any fields added to the csNavigationItem can also be set in the YAML file
 
+The children of the _navigation_ root item represent your navigation tree.  If you require multiple trees, you can
+add them all here.  By default, csNavigationPlugin grabs the first tree declared (in the case above, this would be Home).
+
 Navigation Settings
 -------------------
   
@@ -141,11 +146,11 @@ Navigation Settings
     settings:
       database:
         driven:      off                # imports the above yaml file into the database
-        locked:      off                # locks the provided yaml file from editting in the database
-        branch:      item2              # the branch attribute locks everything outside the branch indicated     
+        locked:      off                # (in development) locks the provided yaml file from editting in the database
+        branch:      item2              # (in development) the branch attribute locks everything outside the branch indicated     
       expanding:
-        default:            on          
-        level:              2
+        default:            on          # (in development)
+        level:              2           # (in development)
 
 Change your database driven setting to on, and csNavigationPlugin will automatically 
 convert your YAML navigation file to your database.  This allows you to build-all-reload
