@@ -26,7 +26,7 @@ abstract class BasecsNavigationComponents extends sfComponents
     // if one does not exist, attempts to generate one from the URL
     $this->items = csBreadcrumbs::hasInstance() ? 
                       csBreadcrumbs::getInstance()->getItems() :
-                      Doctrine::getTable('csNavigationMenu')->getMenu()->getBreadcrumbs();
+                      Doctrine::getTable('csNavigationMenu')->getMenu($this->menu)->getBreadcrumbs();
   }
   
   public function executeTree()
@@ -38,7 +38,7 @@ abstract class BasecsNavigationComponents extends sfComponents
     
     if(!isset($this->items))
     {
-      $nav = Doctrine::getTable('csNavigationMenu')->getMenu();
+      $nav = Doctrine::getTable('csNavigationMenu')->getMenu($this->menu);
       
       $root = $nav->getSegment($this->level, $this->iterations);
       
